@@ -1,3 +1,14 @@
+| 컬럼 | DB 저장값 |
+|---|---|
+| `wage_type` | `MONTHLY`, `HOURLY`, `DAILY` |
+| `contract_status` | `SCHEDULED`, `ACTIVE`, `ENDED` |
+| `attendance_type` | `NORMAL`, `ABSENT`, `PAID_LEAVE`, `UNPAID_LEAVE` |
+| `work_day_type` | `WEEKDAY`, `HOLIDAY` |
+| `payroll_status` | `CALCULATING`, `CONFIRMED`, `PAID` |
+| `earning_type` | `BASE_PAY`, `ALLOWANCE`, `OTHER` |
+| `deduction_type` | `INCOME_TAX`, `LOCAL_INCOME_TAX`, `NATIONAL_PENSION`, `HEALTH_INSURANCE`, `LONG_TERM_CARE_INSURANCE`, `EMPLOYMENT_INSURANCE`, `OTHER` |
+| `payment_action` | `PAYMENT`, `CANCEL` |
+
 /* =========================================================
    1. 근로계약
    employment_contract
