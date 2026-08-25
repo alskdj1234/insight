@@ -67,3 +67,73 @@ CREATE TABLE employment_contract (
 
     signed_time TIMESTAMP NOT NULL
 );
+
+
+
+/* =========================================================
+   2. 직원 근태
+   employee_attendance
+   ========================================================= */
+
+CREATE TABLE employee_attendance (
+
+    emp_attendance_no NUMBER PRIMARY KEY,
+
+    contract_no NUMBER NOT NULL
+        REFERENCES employment_contract(contract_no)
+        ON DELETE CASCADE,
+
+    work_date TIMESTAMP NOT NULL,
+
+    clock_in TIMESTAMP,
+
+    clock_out TIMESTAMP,
+
+    break_minutes NUMBER DEFAULT 0 NOT NULL,
+    CHECK (
+        break_minutes >= 0
+    ),
+
+    attendance_type VARCHAR2(20)
+        DEFAULT 'normal'
+        NOT NULL,
+    CHECK (
+        attendance_type IN (
+            'normal',
+            'absent',
+            'paid_leave',
+            'unpaid_leave'
+        )
+    ),
+
+    work_day_type VARCHAR2(10)
+        DEFAULT 'weekday'
+        NOT NULL,
+    CHECK (
+        work_day_type IN (
+            'weekday',
+            'holiday'
+        )
+    ),
+
+    night_hours NUMBER DEFAULT 0 NOT NULL,
+    CHECK (
+        night_hours >= 0
+    ),
+
+    overtime_hours NUMBER DEFAULT 0 NOT NULL,
+    CHECK (
+        overtime_hours >= 0
+    ),
+
+    CHECK (
+        clock_out IS NULL
+        OR clock_in IS NULL
+        OR clock_out >= clock_in
+    ),
+
+    UNIQUE (
+        contract_no,
+        work_date
+    )
+);
