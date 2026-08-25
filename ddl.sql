@@ -1,15 +1,15 @@
--- =========================================================
--- 1. 근로계약
--- =========================================================
+/* =========================================================
+   1. 근로계약
+   employment_contract
+   ========================================================= */
 
 CREATE TABLE employment_contract (
     contract_no NUMBER PRIMARY KEY,
 
-    employee_no NUMBER
-        REFERENCES employee(employee_no)
-        ON DELETE SET NULL,
+    employee_no NUMBER NOT NULL
+        REFERENCES employee(employee_no),
 
-    wage_type VARCHAR2(20) NOT NULL
+    wage_type VARCHAR2(10) NOT NULL
         CHECK (wage_type IN ('월급', '시급', '일급')),
 
     base_wage NUMBER NOT NULL
@@ -21,17 +21,21 @@ CREATE TABLE employment_contract (
     weekly_work_hours NUMBER(5,2) NOT NULL
         CHECK (weekly_work_hours >= 0),
 
-    contract_start DATE NOT NULL,
+    contract_start TIMESTAMP NOT NULL,
 
-    contract_end DATE,
+    contract_end TIMESTAMP,
 
     payday NUMBER(2) NOT NULL
         CHECK (payday BETWEEN 1 AND 31),
 
-    contract_status VARCHAR2(20)
-        DEFAULT '진행중'
-        NOT NULL
+    contract_status VARCHAR2(12) DEFAULT '진행중' NOT NULL
         CHECK (contract_status IN ('예정', '진행중', '종료')),
+
+    employee_signature VARCHAR2(300) NOT NULL,
+
+    employer_signature VARCHAR2(300) NOT NULL,
+
+    signatured_time TIMESTAMP NOT NULL,
 
     CHECK (
         contract_end IS NULL
@@ -40,9 +44,11 @@ CREATE TABLE employment_contract (
 );
 
 
--- =========================================================
--- 2. 직원 근태
--- =========================================================
+
+/* =========================================================
+   2. 직원근태
+   employee_attendance
+   ========================================================= */
 
 CREATE TABLE employee_attendance (
     emp_attendance_no NUMBER PRIMARY KEY,
@@ -51,18 +57,16 @@ CREATE TABLE employee_attendance (
         REFERENCES employment_contract(contract_no)
         ON DELETE CASCADE,
 
-    work_date DATE NOT NULL,
+    work_date TIMESTAMP NOT NULL,
 
     clock_in TIMESTAMP,
 
     clock_out TIMESTAMP,
 
-    break_minutes NUMBER
-        DEFAULT 0
-        NOT NULL
+    break_minutes NUMBER DEFAULT 0 NOT NULL
         CHECK (break_minutes >= 0),
 
-    attendance_type VARCHAR2(20) NOT NULL
+    attendance_type VARCHAR2(20) DEFAULT '정상' NOT NULL
         CHECK (
             attendance_type IN (
                 '정상',
@@ -72,25 +76,16 @@ CREATE TABLE employee_attendance (
             )
         ),
 
-    work_day_type VARCHAR2(20)
-        DEFAULT '평일'
-        NOT NULL
+    work_day_type VARCHAR2(10) DEFAULT '평일' NOT NULL
         CHECK (
-            work_day_type IN (
-                '평일',
-                '휴일'
-            )
+            work_day_type IN ('평일', '휴일')
         ),
 
-    overtime_hours NUMBER(6,2)
-        DEFAULT 0
-        NOT NULL
-        CHECK (overtime_hours >= 0),
-
-    night_hours NUMBER(6,2)
-        DEFAULT 0
-        NOT NULL
+    night_hours NUMBER(6,2) DEFAULT 0 NOT NULL
         CHECK (night_hours >= 0),
+
+    overtime_hours NUMBER(6,2) DEFAULT 0 NOT NULL
+        CHECK (overtime_hours >= 0),
 
     UNIQUE (
         contract_no,
@@ -105,9 +100,11 @@ CREATE TABLE employee_attendance (
 );
 
 
--- =========================================================
--- 3. 월 급여
--- =========================================================
+
+/* =========================================================
+   3. 급여
+   payroll
+   ========================================================= */
 
 CREATE TABLE payroll (
     payroll_no NUMBER PRIMARY KEY,
@@ -121,9 +118,7 @@ CREATE TABLE payroll (
     payroll_month NUMBER(2) NOT NULL
         CHECK (payroll_month BETWEEN 1 AND 12),
 
-    payroll_status VARCHAR2(20)
-        DEFAULT '산정중'
-        NOT NULL
+    payroll_status VARCHAR2(10) DEFAULT '산정중' NOT NULL
         CHECK (
             payroll_status IN (
                 '산정중',
@@ -140,19 +135,21 @@ CREATE TABLE payroll (
 );
 
 
--- =========================================================
--- 4. 급여 반영 근태
--- =========================================================
+
+/* =========================================================
+   4. 급여 반영 근태
+   payroll_attendance
+   ========================================================= */
 
 CREATE TABLE payroll_attendance (
     payroll_attendance_no NUMBER PRIMARY KEY,
 
-    payroll_no NUMBER NOT NULL
-        REFERENCES payroll(payroll_no)
-        ON DELETE CASCADE,
-
     emp_attendance_no NUMBER NOT NULL
         REFERENCES employee_attendance(emp_attendance_no)
+        ON DELETE CASCADE,
+
+    payroll_no NUMBER NOT NULL
+        REFERENCES payroll(payroll_no)
         ON DELETE CASCADE,
 
     UNIQUE (
@@ -162,9 +159,11 @@ CREATE TABLE payroll_attendance (
 );
 
 
--- =========================================================
--- 5. 지급 항목
--- =========================================================
+
+/* =========================================================
+   5. 급여 지급항목
+   payroll_earning
+   ========================================================= */
 
 CREATE TABLE payroll_earning (
     payroll_earning_no NUMBER PRIMARY KEY,
@@ -182,13 +181,15 @@ CREATE TABLE payroll_earning (
             )
         ),
 
-    earning_name VARCHAR2(50) NOT NULL
+    earning_name VARCHAR2(30) NOT NULL
 );
 
 
--- =========================================================
--- 6. 지급 계산 근거
--- =========================================================
+
+/* =========================================================
+   6. 지급 계산근거
+   payroll_earning_calc
+   ========================================================= */
 
 CREATE TABLE payroll_earning_calc (
     earning_calc_no NUMBER PRIMARY KEY,
@@ -197,8 +198,11 @@ CREATE TABLE payroll_earning_calc (
         REFERENCES payroll_earning(payroll_earning_no)
         ON DELETE CASCADE,
 
-    base_amount NUMBER NOT NULL
-        CHECK (base_amount >= 0),
+    base_amount NUMBER
+        CHECK (
+            base_amount IS NULL
+            OR base_amount >= 0
+        ),
 
     work_hours NUMBER(7,2)
         CHECK (
@@ -209,13 +213,15 @@ CREATE TABLE payroll_earning_calc (
     earn_calculated_amount NUMBER NOT NULL
         CHECK (earn_calculated_amount >= 0),
 
-    earn_calc_note VARCHAR2(500)
+    earn_calc_note VARCHAR2(200)
 );
 
 
--- =========================================================
--- 7. 공제 항목
--- =========================================================
+
+/* =========================================================
+   7. 급여 공제항목
+   payroll_deduction
+   ========================================================= */
 
 CREATE TABLE payroll_deduction (
     deduction_no NUMBER PRIMARY KEY,
@@ -239,9 +245,11 @@ CREATE TABLE payroll_deduction (
 );
 
 
--- =========================================================
--- 8. 공제 계산 근거
--- =========================================================
+
+/* =========================================================
+   8. 공제 계산근거
+   payroll_deduction_calc
+   ========================================================= */
 
 CREATE TABLE payroll_deduction_calc (
     deduction_calc_no NUMBER PRIMARY KEY,
@@ -268,15 +276,17 @@ CREATE TABLE payroll_deduction_calc (
     deduction_calculated_amount NUMBER NOT NULL
         CHECK (deduction_calculated_amount >= 0),
 
-    deduction_basis_year NUMBER(4),
+    deduction_basis_year NUMBER(4) NOT NULL,
 
-    deduction_calc_note VARCHAR2(500)
+    deduction_calc_note VARCHAR2(200)
 );
 
 
--- =========================================================
--- 9. 급여 지급 이력
--- =========================================================
+
+/* =========================================================
+   9. 급여 지급이력
+   payroll_payment
+   ========================================================= */
 
 CREATE TABLE payroll_payment (
     payroll_payment_no NUMBER PRIMARY KEY,
@@ -288,11 +298,9 @@ CREATE TABLE payroll_payment (
     payment_amount NUMBER NOT NULL
         CHECK (payment_amount >= 0),
 
-    payment_at TIMESTAMP
-        DEFAULT SYSTIMESTAMP
-        NOT NULL,
+    payment_at TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
 
-    payment_action VARCHAR2(20) NOT NULL
+    payment_action VARCHAR2(10) NOT NULL
         CHECK (
             payment_action IN (
                 '지급',
@@ -300,7 +308,7 @@ CREATE TABLE payroll_payment (
             )
         ),
 
-    payment_method VARCHAR2(30) NOT NULL,
+    payment_method VARCHAR2(20),
 
-    payment_note VARCHAR2(500)
+    payment_note VARCHAR2(200)
 );
