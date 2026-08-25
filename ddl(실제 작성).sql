@@ -14,7 +14,7 @@ CREATE TABLE employment_contract(
 	
 	wage_type varchar(10) NOT NULL,
 	
-	 check(wage_type IN ('monthly','hourly','daily'),
+	 check(wage_type IN ('monthly','hourly','daily')),
 	 
 	base_wage NUMBER NOT NULL,
 	check(base_wage>=0),
@@ -36,12 +36,12 @@ CREATE TABLE employment_contract(
 	CHECK (payday BETWEEN  1 AND 31),
 	
 	contract_status varchar(12) DEFAULT 'active' NOT NULL,
-	check(contract_status IN ('active','scheduled','ended'),
+	check(contract_status IN ('active','scheduled','ended')),
 	
 	employee_signature varchar(1000) NOT NULL,
 	
 	employer_signature varchar(1000) NOT NULL,
 	
-	signatured_time timestamp NOT NULL,
+	signed_time timestamp NOT NULL
 	
 );
