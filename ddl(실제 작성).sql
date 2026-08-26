@@ -69,6 +69,15 @@ CREATE TABLE employment_contract (
 );
 
 
+ALTER TABLE employment_contract
+MODIFY employee_signature NULL;
+
+ALTER TABLE employment_contract
+MODIFY employer_signature NULL;
+
+ALTER TABLE employment_contract
+MODIFY signed_time NULL;
+
 
 /* =========================================================
    2. 직원 근태
