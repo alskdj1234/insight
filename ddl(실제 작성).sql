@@ -53,6 +53,7 @@ CREATE TABLE employment_contract (
 
     CHECK (
         contract_status IN (
+            'pending',
             'active',
             'scheduled',
             'ended'
