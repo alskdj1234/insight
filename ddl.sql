@@ -1,7 +1,7 @@
 | 컬럼 | DB 저장값 |
 |---|---|
 | `wage_type` | `MONTHLY`, `HOURLY`, `DAILY` |
-| `contract_status` | `SCHEDULED`, `ACTIVE`, `ENDED` |
+| `contract_status` | `pending`,`SCHEDULED`, `ACTIVE`, `ENDED` |
 | `attendance_type` | `NORMAL`, `ABSENT`, `PAID_LEAVE`, `UNPAID_LEAVE` |
 | `work_day_type` | `WEEKDAY`, `HOLIDAY` |
 | `payroll_status` | `CALCULATING`, `CONFIRMED`, `PAID` |
@@ -40,7 +40,7 @@ CREATE TABLE employment_contract (
         CHECK (payday BETWEEN 1 AND 31),
 
     contract_status VARCHAR2(12) DEFAULT '진행중' NOT NULL
-        CHECK (contract_status IN ('예정', '진행중', '종료')),
+        CHECK (contract_status IN ('작성중','예정', '진행중', '종료')),
 
     employee_signature VARCHAR2(300) NOT NULL,
 
@@ -164,7 +164,7 @@ CREATE TABLE payroll_attendance (
         ON DELETE CASCADE,
 
     UNIQUE (
-        payroll_no,
+      
         emp_attendance_no
     )
 );
