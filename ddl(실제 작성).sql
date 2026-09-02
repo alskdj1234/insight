@@ -30,51 +30,42 @@ CREATE TABLE `employee_attendance` (
 	`work_schedule_no`	number	NOT NULL
 );
 
-CREATE TABLE `employee_work_schedule` (
-	`work_schedule_no`	number	NOT NULL,
-	`schedule_date`	timestamp	NOT NULL,
-	`schedule_day_type`	varchar2(10)	NOT NULL,
-	`employee_no2`	number	NOT NULL
-);
 
-ALTER TABLE `employment_contract` ADD CONSTRAINT `PK_EMPLOYMENT_CONTRACT` PRIMARY KEY (
-	`contract_no`
-);
+CREATE TABLE employee_work_schedule (
+    work_schedule_no NUMBER NOT NULL,
+    contract_no NUMBER NOT NULL,
 
-ALTER TABLE `employee_attendance` ADD CONSTRAINT `PK_EMPLOYEE_ATTENDANCE` PRIMARY KEY (
-	`emp_attendance_no`
-);
+    scheduled_work_date TIMESTAMP NOT NULL,
 
-ALTER TABLE `employee_work_schedule` ADD CONSTRAINT `PK_EMPLOYEE_WORK_SCHEDULE` PRIMARY KEY (
-	`work_schedule_no`
-);
+    scheduled_clock_in TIMESTAMP NULL,
+    scheduled_clock_out TIMESTAMP NULL,
 
-ALTER TABLE `employment_contract` ADD CONSTRAINT `FK_employee_TO_employment_contract_1` FOREIGN KEY (
-	`employee_no`
+    scheduled_day_type VARCHAR2(10) NOT NULL,
+
+    actual_work_hours NUMBER DEFAULT 0 NOT NULL,
+    actual_overtime_hours NUMBER DEFAULT 0 NOT NULL,
+    actual_night_hours NUMBER DEFAULT 0 NOT NULL,
+    actual_holiday_hours NUMBER DEFAULT 0 NOT NULL,
+
+    CONSTRAINT pk_employee_work_schedule
+        PRIMARY KEY (work_schedule_no),
+
+    CONSTRAINT fk_contract_work_schedule
+        FOREIGN KEY (contract_no)
+        REFERENCES employment_contract(contract_no),
+
+    CONSTRAINT uq_contract_work_date
+        UNIQUE (
+            contract_no,
+            scheduled_work_date
+        ),
+
+  CONSTRAINT ck_work_schedule_day_type
+CHECK (
+    scheduled_day_type IN (
+        'workday',
+        'holiday',
+        'dayOff'
+    )
 )
-REFERENCES `employee` (
-	`employee_no`
 );
-
-ALTER TABLE `employee_attendance` ADD CONSTRAINT `FK_employment_contract_TO_employee_attendance_1` FOREIGN KEY (
-	`contract_no`
-)
-REFERENCES `employment_contract` (
-	`contract_no`
-);
-
-ALTER TABLE `employee_attendance` ADD CONSTRAINT `FK_employee_work_schedule_TO_employee_attendance_1` FOREIGN KEY (
-	`work_schedule_no`
-)
-REFERENCES `employee_work_schedule` (
-	`work_schedule_no`
-);
-
-ALTER TABLE `employee_work_schedule` ADD CONSTRAINT `FK_employee_TO_employee_work_schedule_1` FOREIGN KEY (
-	`employee_no`
-)
-REFERENCES `employee` (
-	`employee_no`
-);
-
-
