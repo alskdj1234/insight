@@ -30,6 +30,9 @@ CREATE TABLE `employee_attendance` (
 	`work_schedule_no`	number	NOT NULL
 );
 
+ALTER TABLE employee_attendance
+DROP COLUMN work_day_type;
+
 
 CREATE TABLE employee_work_schedule (
     work_schedule_no NUMBER NOT NULL,
