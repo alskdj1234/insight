@@ -69,3 +69,4 @@ CHECK (
     )
 )
 );
+CREATE SEQUENCE work_schedule_seq;
