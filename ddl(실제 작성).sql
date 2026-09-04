@@ -251,7 +251,7 @@ CREATE TABLE payroll_payment (
     payment_amount NUMBER NOT NULL,
     payment_at TIMESTAMP NOT NULL,
 
-    payment_status VARCHAR(25) default 'unpaid' not NULL,
+    payment_status VARCHAR(25) ,
     payment_method VARCHAR2(20) NULL,
     payment_note VARCHAR2(200) NULL,
 
@@ -270,7 +270,7 @@ CREATE TABLE payroll_payment (
     CONSTRAINT ck_payment_status
         CHECK (
             payment_status IN (
-                'unpaid',
+               
 				'paid',
                 'cancel'
             )
