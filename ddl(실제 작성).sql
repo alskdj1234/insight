@@ -277,6 +277,30 @@ CREATE TABLE payroll_payment (
         )
 );
 
+//급여 취소로 인한 추가
+
+alter table payroll_payment
+add cancel_target_payment_no number;
+
+alter table payroll_payment
+add constraint FK_PAYMENT_CANCEL_TARGET
+foreign key (cancel_target_payment_no)
+references payroll_payment(payroll_payment_no);
+
+alter table payroll_payment
+add constraint UK_PAYMENT_CANCEL_TARGET
+unique (cancel_target_payment_no);
+
+alter table payroll_payment
+add constraint CK_PAYMENT_CANCEL_TARGET
+check (
+    (payment_status = 'paid'
+        and cancel_target_payment_no is null)
+    or
+    (payment_status = 'cancelled'
+        and cancel_target_payment_no is not null)
+);
+
 -- =========================================================
 -- SEQUENCE
 -- =========================================================
