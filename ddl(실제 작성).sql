@@ -301,6 +301,13 @@ check (
         and cancel_target_payment_no is not null)
 );
 
+alter table payroll_payment
+add constraint CK_PAYMENT_METHOD_REQUIRED
+check (
+    payment_status != 'paid'
+    or payment_method is not null
+);
+
 -- =========================================================
 -- SEQUENCE
 -- =========================================================
