@@ -76,17 +76,11 @@ CREATE SEQUENCE work_schedule_seq;
 
 
 
-create sequence payroll_seq;
-create sequene payroll_deduction_seq;
-create sequence payroll_payment_seq;
-
-
-
-
 
 
 -- =========================================================
--- 1. 급여
+-- 1. PAYROLL
+-- 직원 월 급여 산정 결과
 -- =========================================================
 
 CREATE TABLE payroll (
@@ -102,7 +96,7 @@ CREATE TABLE payroll (
     total_holiday_hours NUMBER DEFAULT 0 NOT NULL,
 
     base_pay NUMBER DEFAULT 0 NOT NULL,
-    weekly_holiday_pay NUMBER DEFAULT 0 NOT NULL,
+    week_holiday_pay NUMBER DEFAULT 0 NOT NULL,
     overtime_pay NUMBER DEFAULT 0 NOT NULL,
     night_pay NUMBER DEFAULT 0 NOT NULL,
     holiday_pay NUMBER DEFAULT 0 NOT NULL,
@@ -112,7 +106,6 @@ CREATE TABLE payroll (
     net_pay NUMBER DEFAULT 0 NOT NULL,
 
     payroll_status VARCHAR2(12) DEFAULT 'calculating' NOT NULL,
-    payment_status VARCHAR2(12) DEFAULT 'unpaid' NOT NULL,
 
     calculated_at TIMESTAMP NULL,
     confirmed_at TIMESTAMP NULL,
@@ -124,14 +117,22 @@ CREATE TABLE payroll (
         FOREIGN KEY (employee_no)
         REFERENCES employee(employee_no),
 
-    CONSTRAINT uk_payroll_period
-        UNIQUE (employee_no, payroll_year, payroll_month),
+    CONSTRAINT uk_payroll_employee_period
+        UNIQUE (
+            employee_no,
+            payroll_year,
+            payroll_month
+        ),
 
     CONSTRAINT ck_payroll_year
-        CHECK (payroll_year BETWEEN 2000 AND 9999),
+        CHECK (
+            payroll_year BETWEEN 2000 AND 9999
+        ),
 
     CONSTRAINT ck_payroll_month
-        CHECK (payroll_month BETWEEN 1 AND 12),
+        CHECK (
+            payroll_month BETWEEN 1 AND 12
+        ),
 
     CONSTRAINT ck_payroll_hours
         CHECK (
@@ -144,7 +145,7 @@ CREATE TABLE payroll (
     CONSTRAINT ck_payroll_amount
         CHECK (
             base_pay >= 0
-            AND weekly_holiday_pay >= 0
+            AND week_holiday_pay >= 0
             AND overtime_pay >= 0
             AND night_pay >= 0
             AND holiday_pay >= 0
@@ -159,21 +160,13 @@ CREATE TABLE payroll (
                 'calculating',
                 'confirmed'
             )
-        ),
-
-    CONSTRAINT ck_payroll_payment_status
-        CHECK (
-            payment_status IN (
-                'unpaid',
-                'paid',
-                'cancelled'
-            )
         )
 );
 
 
 -- =========================================================
--- 2. 급여 공제
+-- 2. PAYROLL_DEDUCTION
+-- 급여 공제 내역
 -- =========================================================
 
 CREATE TABLE payroll_deduction (
@@ -198,14 +191,16 @@ CREATE TABLE payroll_deduction (
         FOREIGN KEY (payroll_no)
         REFERENCES payroll(payroll_no),
 
-    CONSTRAINT uk_deduction_type
-        UNIQUE (payroll_no, deduction_type),
+    CONSTRAINT uk_payroll_deduction_type
+        UNIQUE (
+            payroll_no,
+            deduction_type
+        ),
 
-    CONSTRAINT ck_deduction_base
-        CHECK (base_amount >= 0),
-
-    CONSTRAINT ck_deduction_amount
-        CHECK (deduction_amount >= 0),
+    CONSTRAINT ck_deduction_base_amount
+        CHECK (
+            base_amount >= 0
+        ),
 
     CONSTRAINT ck_deduction_rate
         CHECK (
@@ -213,13 +208,18 @@ CREATE TABLE payroll_deduction (
             OR deduction_rate >= 0
         ),
 
-    CONSTRAINT ck_deduction_fixed
+    CONSTRAINT ck_deduction_fixed_amount
         CHECK (
             fixed_deduction_amount IS NULL
             OR fixed_deduction_amount >= 0
         ),
 
-    CONSTRAINT ck_deduction_year
+    CONSTRAINT ck_deduction_amount
+        CHECK (
+            deduction_amount >= 0
+        ),
+
+    CONSTRAINT ck_deduction_basis_year
         CHECK (
             deduction_basis_year BETWEEN 2000 AND 9999
         ),
@@ -240,7 +240,8 @@ CREATE TABLE payroll_deduction (
 
 
 -- =========================================================
--- 3. 급여 지급내역
+-- 3. PAYROLL_PAYMENT
+-- 실제 급여 지급 / 취소 내역
 -- =========================================================
 
 CREATE TABLE payroll_payment (
@@ -262,7 +263,9 @@ CREATE TABLE payroll_payment (
         REFERENCES payroll(payroll_no),
 
     CONSTRAINT ck_payment_amount
-        CHECK (payment_amount > 0),
+        CHECK (
+            payment_amount > 0
+        ),
 
     CONSTRAINT ck_payment_action
         CHECK (
@@ -272,7 +275,6 @@ CREATE TABLE payroll_payment (
             )
         )
 );
-
 
 -- =========================================================
 -- SEQUENCE
@@ -298,7 +300,7 @@ NOCYCLE;
 
 
 -- =========================================================
--- COMMENT : payroll
+-- COMMENTS : PAYROLL
 -- =========================================================
 
 COMMENT ON TABLE payroll IS '직원 월 급여 산정 결과';
@@ -314,28 +316,27 @@ COMMENT ON COLUMN payroll.total_overtime_hours IS '총 연장근로시간';
 COMMENT ON COLUMN payroll.total_night_hours IS '총 야간근로시간';
 COMMENT ON COLUMN payroll.total_holiday_hours IS '총 휴일근로시간';
 
-COMMENT ON COLUMN payroll.base_pay IS '산정된 기본급';
-COMMENT ON COLUMN payroll.weekly_holiday_pay IS '주휴수당';
+COMMENT ON COLUMN payroll.base_pay IS '산정 기본급';
+COMMENT ON COLUMN payroll.week_holiday_pay IS '주휴수당';
 COMMENT ON COLUMN payroll.overtime_pay IS '연장근로수당';
 COMMENT ON COLUMN payroll.night_pay IS '야간근로수당';
 COMMENT ON COLUMN payroll.holiday_pay IS '휴일근로수당';
 
 COMMENT ON COLUMN payroll.gross_pay IS '공제 전 총 지급액';
 COMMENT ON COLUMN payroll.total_deduction IS '총 공제금액';
-COMMENT ON COLUMN payroll.net_pay IS '공제 후 지급 예정금액';
+COMMENT ON COLUMN payroll.net_pay IS '공제 후 지급금액';
 
-COMMENT ON COLUMN payroll.payroll_status IS '급여 산정 상태: calculating/confirmed';
-COMMENT ON COLUMN payroll.payment_status IS '급여 지급 상태: unpaid/paid/cancelled';
+COMMENT ON COLUMN payroll.payroll_status IS '급여 산정 상태 calculating/confirmed';
 
 COMMENT ON COLUMN payroll.calculated_at IS '급여 산정 일시';
 COMMENT ON COLUMN payroll.confirmed_at IS '급여 확정 일시';
 
 
 -- =========================================================
--- COMMENT : payroll_deduction
+-- COMMENTS : PAYROLL_DEDUCTION
 -- =========================================================
 
-COMMENT ON TABLE payroll_deduction IS '급여별 공제내역';
+COMMENT ON TABLE payroll_deduction IS '급여별 공제 내역';
 
 COMMENT ON COLUMN payroll_deduction.deduction_no IS '급여 공제번호';
 COMMENT ON COLUMN payroll_deduction.payroll_no IS '급여번호';
@@ -348,22 +349,23 @@ COMMENT ON COLUMN payroll_deduction.fixed_deduction_amount IS '정액 공제금�
 
 COMMENT ON COLUMN payroll_deduction.deduction_amount IS '최종 공제금액';
 
-COMMENT ON COLUMN payroll_deduction.deduction_basis_year IS '공제 계산 기준연도';
-COMMENT ON COLUMN payroll_deduction.deduction_note IS '공제 계산 비고';
+COMMENT ON COLUMN payroll_deduction.deduction_basis_year IS '공제 기준연도';
+COMMENT ON COLUMN payroll_deduction.deduction_note IS '공제 비고';
 
 
 -- =========================================================
--- COMMENT : payroll_payment
+-- COMMENTS : PAYROLL_PAYMENT
 -- =========================================================
 
-COMMENT ON TABLE payroll_payment IS '급여 실제 지급내역';
+COMMENT ON TABLE payroll_payment IS '급여 실제 지급 및 취소 내역';
 
 COMMENT ON COLUMN payroll_payment.payroll_payment_no IS '급여 지급내역번호';
 COMMENT ON COLUMN payroll_payment.payroll_no IS '급여번호';
-
 COMMENT ON COLUMN payroll_payment.payment_amount IS '실제 지급 또는 취소 금액';
-COMMENT ON COLUMN payroll_payment.payment_at IS '실제 지급 또는 취소 처리일시';
+COMMENT ON COLUMN payroll_payment.payment_at IS '지급 또는 취소 처리일시';
+COMMENT ON COLUMN payroll_payment.payment_action IS '지급행위: paid/cancel';
+COMMENT ON COLUMN payroll_payment.payment_method IS '지급방법';
+COMMENT ON COLUMN payroll_payment.payment_note IS '지급 비고';
 
-COMMENT ON COLUMN payroll_payment.payment_action IS '지급처리: paid/cancel';
-COMMENT ON COLUMN payroll_payment.payment_method IS '급여 지급방법';
-COMMENT ON COLUMN payroll_payment.payment_note IS '급여 지급 비고';
+
+
