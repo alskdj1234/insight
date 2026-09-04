@@ -251,7 +251,7 @@ CREATE TABLE payroll_payment (
     payment_amount NUMBER NOT NULL,
     payment_at TIMESTAMP NOT NULL,
 
-    payment_action VARCHAR2(10) NOT NULL,
+    payment_action VARCHAR2(10) NULL,
     payment_method VARCHAR2(20) NULL,
     payment_note VARCHAR2(200) NULL,
 
